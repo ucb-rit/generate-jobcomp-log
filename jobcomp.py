@@ -88,7 +88,7 @@ def paginate_req_table(url_function, params=[None, None, None, None]):
 # reservationname, gres, account, qos, wckey, cluster, submittime,
 # eligibletime, arrayjobid, arraytaskid, derivedexitcode, exitcode
 
-line_template = '''JobId={jobid} UserId={username}({userid}) JobState={jobstate} Partition={partition}
+line_template = '''JobId={jobid} UserId=({userid}) JobState={jobstate} Partition={partition}
 StartTime={starttime} EndTime={endtime} NodeList={nodelist} NodeCnt={nodecount} ProcCnt={proccount}
 QOS={qos} SubmitTime={submittime}'''
 
