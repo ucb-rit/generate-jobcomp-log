@@ -12,9 +12,9 @@ docstr = '''
 [version: {}]
 '''.format(VERSION)
 
-# BASE_URL = 'http://mybrc.brc.berkeley.edu/mybrc-rest/'
+BASE_URL = 'http://mybrc.brc.berkeley.edu/mybrc-rest/'
 # BASE_URL = 'https://scgup-dev.lbl.gov:8443/mybrc-rest'
-BASE_URL = 'http://localhost:8880/mybrc-rest'
+# BASE_URL = 'http://localhost:8880/mybrc-rest'
 
 line_template = '''JobId={jobid} UserId={username}({userid}) GroupId={groupname}(groupid) Name={name} JobState={jobstate} Partition={partition} TimeLimit={timelimit} StartTime={starttime} EndTime={endtime} NodeList={nodelist} NodeCnt={node_count} ProcCnt={proc_count} WorkDir={workdir} ReservationName={reservation_name} Gres={g_res} Account={account} QOS={qos} WcKey={wc_key} Cluster={cluster} SubmitTime={submittime} EligibleTime={eligibletime} ArrayJobId={array_jobid} ArrayTaskId={array_taskid} DerivedExitCode={derived_exitcode} ExitCode={exitcode}'''
 # jobid, username, userid, groupname, groupid, name, jobstate, partition,
