@@ -77,9 +77,9 @@ def calculate_params():
     with open(FILE_NAME, 'r') as f:
         lines = f.read().splitlines()
         if len(lines) > 0:
-          blobs = lines[-1].split()
+            blobs = lines[-1].split()
         else:
-          return [None, None, None, None]
+            return [None, None, None, None]
 
     last_start_time = None
     for blob in blobs:
@@ -131,7 +131,7 @@ with open(FILE_NAME, 'a') as f:
                                       jobstate=jobstate,
                                       partition=partition,
                                       starttime=starttime, endtime=endtime,
-                                      nodelist=nodelist, 
+                                      nodelist=nodelist,
                                       nodecount=nodecnt, proccount=proccnt,
                                       qos=qos,
                                       submittime=submittime)) + '\n')
