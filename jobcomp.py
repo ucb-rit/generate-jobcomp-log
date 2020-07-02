@@ -81,8 +81,17 @@ def calculate_params():
     last_start_time = None
     for blob in blobs:
         if 'StartTime=' in blob:
-          last_start_time = blob.split('=')[-1]
+            last_start_time = blob.split('=')[-1]
     return [last_start_time, None, None, None]
+
+
+def guard(params, param):
+    try:
+        ret = params[param]
+    except TypeError:
+        ret = None
+
+    return ret
 
 
 params = [None, None, None, None]
@@ -94,17 +103,21 @@ line_template = '''JobId={jobid} UserId={userid} JobState={jobstate} Partition={
 with open(FILE_NAME, 'a') as f:
     for batch in paginate_req_table(get_job_url, params):
         for job in batch:
-            jobid = job['jobslurmid']
-            userid = job['userid']
-            jobstate = job['jobstatus']
-            partition = job['partition']
-            starttime = process_date_time(job['startdate'][:-1])
-            endtime = process_date_time(job['enddate'][:-1])
-            nodelist = job['nodes']
-            nodecnt = job['num_alloc_nodes']
-            proccnt = job['num_cpus']
-            qos = job['qos']
-            submittime = process_date_time(job['submitdate'][:-1])
+            jobid = guard(job, 'jobslurmid')
+            userid = guard(job, 'userid')
+            jobstate = guard(job, 'jobstatus')
+            partition = guard(job'partition')
+            nodelist = guard(job, 'nodes')
+            nodecnt = guard(job, 'num_alloc_nodes')
+            proccnt = guard(job, 'num_cpus')
+            qos = guard(job, 'qos')
+            starttime = guard(job, 'startdate')
+            endtime = guard(job, 'enddate')
+            submittime = guard(job, 'submitdate')
+
+            starttime = None if not starttime else process_date_time(starttime[:-1])
+            endtime = None if not endtime else process_date_time(endtime[:-1])
+            submittime = None if not submittime else process_date_time(submittime[:-1])
 
             f.write(string.Formatter()
                     .vformat(line_template, (),
@@ -116,7 +129,7 @@ with open(FILE_NAME, 'a') as f:
                                       nodelist=str(nodelist),
                                       nodecount=nodecnt, proccount=proccnt,
                                       qos=qos,
-                                      submittime=submittime)) + '\n') 
+                                      submittime=submittime)) + '\n')
 
             print string.Formatter() \
                 .vformat(line_template, (),
@@ -129,4 +142,3 @@ with open(FILE_NAME, 'a') as f:
                                   nodecount=nodecnt, proccount=proccnt,
                                   qos=qos,
                                   submittime=submittime))
-
