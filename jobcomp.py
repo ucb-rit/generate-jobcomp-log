@@ -76,7 +76,10 @@ def paginate_req_table(url_function, params=[None, None, None, None]):
 def calculate_params():
     with open(FILE_NAME, 'r') as f:
         lines = f.read().splitlines()
-        blobs = lines[-1].split()
+        if len(lines) > 0:
+          blobs = lines[-1].split()
+        else:
+          return [None, None, None, None]
 
     last_start_time = None
     for blob in blobs:
@@ -106,7 +109,7 @@ with open(FILE_NAME, 'a') as f:
             jobid = guard(job, 'jobslurmid')
             userid = guard(job, 'userid')
             jobstate = guard(job, 'jobstatus')
-            partition = guard(job'partition')
+            partition = guard(job, 'partition')
             nodelist = guard(job, 'nodes')
             nodecnt = guard(job, 'num_alloc_nodes')
             proccnt = guard(job, 'num_cpus')
@@ -119,6 +122,8 @@ with open(FILE_NAME, 'a') as f:
             endtime = None if not endtime else process_date_time(endtime[:-1])
             submittime = None if not submittime else process_date_time(submittime[:-1])
 
+            nodelist = [elem['name'] for elem in nodelist]
+
             f.write(string.Formatter()
                     .vformat(line_template, (),
                              SafeDict(jobid=jobid,
@@ -126,7 +131,7 @@ with open(FILE_NAME, 'a') as f:
                                       jobstate=jobstate,
                                       partition=partition,
                                       starttime=starttime, endtime=endtime,
-                                      nodelist=str(nodelist),
+                                      nodelist=nodelist, 
                                       nodecount=nodecnt, proccount=proccnt,
                                       qos=qos,
                                       submittime=submittime)) + '\n')
@@ -138,7 +143,7 @@ with open(FILE_NAME, 'a') as f:
                                   jobstate=jobstate,
                                   partition=partition,
                                   starttime=starttime, endtime=endtime,
-                                  nodelist=str(nodelist),
+                                  nodelist=nodelist,
                                   nodecount=nodecnt, proccount=proccnt,
                                   qos=qos,
                                   submittime=submittime))
