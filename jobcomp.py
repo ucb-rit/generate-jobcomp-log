@@ -5,6 +5,7 @@ import json
 import time
 import string
 from collections import defaultdict
+import os
 
 
 VERSION = 0.1
@@ -16,15 +17,7 @@ BASE_URL = 'http://mybrc.brc.berkeley.edu/mybrc-rest/'
 # BASE_URL = 'https://scgup-dev.lbl.gov:8443/mybrc-rest'
 # BASE_URL = 'http://localhost:8880/mybrc-rest'
 
-line_template = '''JobId={jobid} UserId={username}({userid}) GroupId={groupname}(groupid) Name={name} JobState={jobstate} Partition={partition} TimeLimit={timelimit}
-StartTime={starttime} EndTime={endtime} NodeList={nodelist} NodeCnt={node_count} ProcCnt={proc_count} WorkDir={workdir} ReservationName={reservation_name} Gres={g_res}
-Account={account} QOS={qos} WcKey={wc_key} Cluster={cluster} SubmitTime={submittime} EligibleTime={eligibletime} ArrayJobId={array_jobid} ArrayTaskId={array_taskid}
-DerivedExitCode={derived_exitcode} ExitCode={exitcode}'''
-# jobid, username, userid, groupname, groupid, name, jobstate, partition,
-# timelimit, starttime, endtime, nodelist, nodecnt, proccnt, workdir,
-# reservationname, gres, account, qos, wckey, cluster, submittime,
-# eligibletime, arrayjobid, arraytaskid, derivedexitcode, exitcode
-
+FILE_NAME = 'jobcomp.log'
 
 timestamp_format = '%Y-%m-%dT%H:%M:%S'
 
@@ -80,61 +73,60 @@ def paginate_req_table(url_function, params=[None, None, None, None]):
     # return table
 
 
-# jobs = paginate_req_table(get_job_url)
+def calculate_params():
+    with open(FILE_NAME, 'r') as f:
+        lines = f.read().splitlines()
+        blobs = lines[-1].split()
+
+    last_start_time = None
+    for blob in blobs:
+        if 'StartTime=' in blob:
+          last_start_time = blob.split('=')[-1]
+    return [last_start_time, None, None, None]
 
 
-# jobid, username, userid, groupname, groupid, name, jobstate, partition,
-# timelimit, starttime, endtime, nodelist, nodecnt, proccnt, workdir,
-# reservationname, gres, account, qos, wckey, cluster, submittime,
-# eligibletime, arrayjobid, arraytaskid, derivedexitcode, exitcode
+params = [None, None, None, None]
+if os.path.isfile(FILE_NAME):
+    params = calculate_params()
 
-line_template = '''JobId={jobid} UserId=({userid}) JobState={jobstate} Partition={partition}
-StartTime={starttime} EndTime={endtime} NodeList={nodelist} NodeCnt={nodecount} ProcCnt={proccount}
-QOS={qos} SubmitTime={submittime}'''
+line_template = '''JobId={jobid} UserId={userid} JobState={jobstate} Partition={partition} StartTime={starttime} EndTime={endtime} NodeList={nodelist} NodeCnt={nodecount} ProcCnt={proccount} QOS={qos} SubmitTime={submittime}'''
 
-# for job in jobs:
-for batch in paginate_req_table(get_job_url):
-    for job in batch:
-        jobid = job['jobslurmid']
-        userid = job['userid']
-        jobstate = job['jobstatus']
-        partition = job['partition']
-        starttime = process_date_time(job['startdate'][:-1])
-        endtime = process_date_time(job['enddate'][:-1])
-        nodelist = job['nodes']
-        nodecnt = job['num_alloc_nodes']
-        proccnt = job['num_cpus']
-        qos = job['qos']
-        submittime = process_date_time(job['submitdate'][:-1])
+with open(FILE_NAME, 'a') as f:
+    for batch in paginate_req_table(get_job_url, params):
+        for job in batch:
+            jobid = job['jobslurmid']
+            userid = job['userid']
+            jobstate = job['jobstatus']
+            partition = job['partition']
+            starttime = process_date_time(job['startdate'][:-1])
+            endtime = process_date_time(job['enddate'][:-1])
+            nodelist = job['nodes']
+            nodecnt = job['num_alloc_nodes']
+            proccnt = job['num_cpus']
+            qos = job['qos']
+            submittime = process_date_time(job['submitdate'][:-1])
 
-        # accountid = job['accountid']
+            f.write(string.Formatter()
+                    .vformat(line_template, (),
+                             SafeDict(jobid=jobid,
+                                      userid=userid,
+                                      jobstate=jobstate,
+                                      partition=partition,
+                                      starttime=starttime, endtime=endtime,
+                                      nodelist=str(nodelist),
+                                      nodecount=nodecnt, proccount=proccnt,
+                                      qos=qos,
+                                      submittime=submittime)) + '\n') 
 
-        # username              : get using userid
-        # groupname
-        # groupid
-        # name
-        # timelimit
-        # wckey
-        # cluster
-        # workdir
-        # reservationname
-        # gres
-        # account               : get using accountid
-        # eligibletime
-        # arrayjobid
-        # arraytaskid
-        # derivedexitcode
-        # exitcode
-
-        print string.Formatter() \
-            .vformat(line_template, (),
-                     SafeDict(jobid=jobid,
-                              userid=userid,
-                              jobstate=jobstate,
-                              partition=partition,
-                              starttime=starttime, endtime=endtime,
-                              nodelist=str(nodelist),
-                              nodecount=nodecnt, proccount=proccnt,
-                              qos=qos,
-                              submittime=submittime))
+            print string.Formatter() \
+                .vformat(line_template, (),
+                         SafeDict(jobid=jobid,
+                                  userid=userid,
+                                  jobstate=jobstate,
+                                  partition=partition,
+                                  starttime=starttime, endtime=endtime,
+                                  nodelist=str(nodelist),
+                                  nodecount=nodecnt, proccount=proccnt,
+                                  qos=qos,
+                                  submittime=submittime))
 
